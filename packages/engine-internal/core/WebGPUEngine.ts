@@ -30,9 +30,19 @@ export class WebGPUEngine {
     }
 
     /**
-     * Initialize WebGPU engine
+     * Initialize WebGPU engine (public API)
      */
-    async init(): Promise<boolean> {
+    async initialize(): Promise<void> {
+        const success = await this.init();
+        if (!success) {
+            throw new Error('Failed to initialize WebGPU engine');
+        }
+    }
+
+    /**
+     * Initialize WebGPU engine (internal)
+     */
+    private async init(): Promise<boolean> {
         try {
             // Request GPU adapter
             const adapter = await navigator.gpu?.requestAdapter?.();

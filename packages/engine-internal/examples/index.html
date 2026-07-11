@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGPU Game Engine - Pong</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #1a1a1a;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+        }
+
+        #stats {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 100;
+            min-width: 200px;
+        }
+
+        #stats div {
+            margin: 3px 0;
+        }
+
+        #stats .label {
+            color: #0f0;
+        }
+
+        #stats .value {
+            color: #fff;
+            margin-left: 5px;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: #000;
+        }
+
+        #error {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 0, 0, 0.9);
+            padding: 20px 30px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 200;
+            max-width: 600px;
+            display: none;
+        }
+
+        #error h2 {
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        #error p {
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 150;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 255, 0, 0.3);
+            border-top: 4px solid #0f0;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        #loading p {
+            font-size: 14px;
+            color: #0f0;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <div class="spinner"></div>
+        <p>Initializing WebGPU Engine...</p>
+    </div>
+    
+    <div id="stats">
+        <div><span class="label">FPS:</span><span class="value" id="fps">0</span></div>
+        <div><span class="label">Frame:</span><span class="value" id="frame">0</span>ms</div>
+        <div><span class="label">GPU:</span><span class="value" id="gpu">0</span>ms</div>
+        <div><span class="label">Bodies:</span><span class="value" id="bodies">0</span></div>
+    </div>
+
+    <div id="error">
+        <h2>❌ WebGPU Not Supported</h2>
+        <p id="errorMsg">Your browser does not support WebGPU yet. Try Chrome/Edge 113+ or Firefox/Safari 2024+</p>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script type="module">
+        import { WebGPUEngine } from '../core/WebGPUEngine.js';
+
+        const canvas = document.getElementById('gameCanvas');
+        const errorDiv = document.getElementById('error');
+        const loadingDiv = document.getElementById('loading');
+
+        async function main() {
+            try {
+                // Verify WebGPU support
+                if (!navigator.gpu) {
+                    throw new Error('WebGPU not supported in this browser');
+                }
+
+                // Create and initialize engine
+                const engine = new WebGPUEngine(canvas);
+                await engine.initialize();
+
+                loadingDiv.style.display = 'none';
+
+                // Stats tracking
+                let frameCount = 0;
+                let lastTime = performance.now();
+                let fps = 0;
+
+                // Render loop
+                const renderFrame = async () => {
+                    const now = performance.now();
+                    const dt = (now - lastTime) / 1000;
+                    lastTime = now;
+
+                    // Update FPS
+                    frameCount++;
+                    if (frameCount % 10 === 0) {
+                        fps = Math.round(1 / dt);
+                        document.getElementById('fps').textContent = fps;
+                        document.getElementById('frame').textContent = (dt * 1000).toFixed(2);
+                    }
+
+                    // Render frame with blue background
+                    await engine.renderFrame({ r: 0.1, g: 0.1, b: 0.2, a: 1.0 });
+
+                    document.getElementById('frame').textContent = 
+                        (frameCount % 60 === 0 ? (now - lastTime).toFixed(2) : 
+                         document.getElementById('frame').textContent);
+
+                    requestAnimationFrame(renderFrame);
+                };
+
+                renderFrame();
+
+                console.log('✅ WebGPU Engine initialized successfully');
+                console.log('FPS:', fps, '| GPU:', engine.getInfo?.()?.name || 'Unknown');
+
+            } catch (error) {
+                console.error('❌ WebGPU Error:', error);
+                loadingDiv.style.display = 'none';
+                errorDiv.style.display = 'block';
+                document.getElementById('errorMsg').textContent = error.message;
+            }
+        }
+
+        // Start when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', main);
+        } else {
+            main();
+        }
+    </script>
+</body>
+</html>
