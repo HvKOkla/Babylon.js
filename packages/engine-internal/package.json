@@ -1,0 +1,32 @@
+{
+  "name": "@babylon/engine-internal",
+  "version": "1.0.0",
+  "description": "WebGPU-first internal game engine for indie teams",
+  "main": "dist/core/WebGPUEngine.js",
+  "types": "dist/core/WebGPUEngine.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "example": "node examples/WebGPUGameExample.ts",
+    "test": "jest",
+    "benchmark": "node examples/WebGPUGameExample.ts --benchmark"
+  },
+  "keywords": [
+    "webgpu",
+    "game-engine",
+    "graphics",
+    "physics",
+    "ecs",
+    "3d",
+    "rendering"
+  ],
+  "author": "Babylon.js Contributors",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.1.0"
+  },
+  "peerDependencies": {
+    "babylon.js": "^6.0.0"
+  }
+}
